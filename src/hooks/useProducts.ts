@@ -31,7 +31,7 @@ export function useProductCount(category: string | null, search?: string) {
       const cached = localStorage.getItem(`products-count-${category ?? 'all'}`)
       return cached ? Number(cached) : undefined
     },
-    staleTime: 0,
+
   })
 }
 
@@ -56,7 +56,7 @@ export function useFirstPageProducts(category: string | null, search?: string) {
       if (error) throw error
       return data
     },
-    staleTime: 0,
+
   })
 }
 
@@ -87,7 +87,7 @@ export function useMoreProducts(category: string | null, enabled: boolean, searc
       return PAGE_SIZE + allPages.length * PAGE_SIZE
     },
     enabled,
-    staleTime: 0,
+
   })
 }
 
@@ -111,7 +111,7 @@ export function useCategories() {
         return undefined
       }
     },
-    staleTime: 0,
+
   })
 }
 
@@ -126,7 +126,7 @@ export function useProducts() {
       if (error) throw error
       return data
     },
-    staleTime: 0,
+
   })
 }
 
@@ -151,7 +151,7 @@ export function useProduct(id: string) {
         return undefined
       }
     },
-    staleTime: 0,
+
   })
 }
 
@@ -172,7 +172,6 @@ type CreateProductInput = {
   name: string
   category: string
   description: string
-  price: number
   thumbnailFiles: File[]
   detailImageFiles: File[]
 }
@@ -193,7 +192,6 @@ export function useCreateProduct() {
         name: input.name,
         category: input.category,
         description: input.description,
-        price: input.price || 0,
         main_image: thumbnailUrls[0],
         thumbnail_images: thumbnailUrls,
         detail_images: detailImageUrls,
@@ -218,7 +216,6 @@ type UpdateProductInput = {
   name: string
   category: string
   description: string
-  price: number
   thumbnails: (File | string)[]
   detailImages: (File | string)[]
 }
@@ -245,7 +242,6 @@ export function useUpdateProduct() {
           name: input.name,
           category: input.category,
           description: input.description,
-          price: input.price,
           main_image: thumbnailUrls[0],
           thumbnail_images: thumbnailUrls,
           detail_images: detailImageUrls,

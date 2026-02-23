@@ -16,7 +16,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <Link to={`/product/${product.id}`} className="group block" onMouseEnter={prefetchImages}>
-      <div className="overflow-hidden">
+      <div className="aspect-square overflow-hidden">
         <img
           src={product.main_image}
           alt={`${product.name} - 한양티앤씨 ${product.category}`}
@@ -29,7 +29,7 @@ export default function ProductCard({ product }: { product: Product }) {
           {product.name}
         </h3>
         <p className="mt-0.5 text-[13px] sm:text-[14px] text-gray-400">
-          {product.price > 0 ? `${product.price.toLocaleString()}원` : '판매가 비공개'}
+          {product.category}
         </p>
       </div>
     </Link>

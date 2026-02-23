@@ -12,7 +12,6 @@ type FormData = {
   name: string
   category: string
   description: string
-  price: number
 }
 
 function ImagePreviewModal({
@@ -205,7 +204,6 @@ export default function ProductForm({
           name: product.name,
           category: product.category,
           description: product.description,
-          price: product.price,
         }
       : undefined,
   })
@@ -235,7 +233,6 @@ export default function ProductForm({
         name: product.name,
         category: product.category,
         description: product.description,
-        price: product.price,
       })
     }
   }, [product, reset])
@@ -249,7 +246,6 @@ export default function ProductForm({
         name: data.name,
         category: data.category,
         description: data.description,
-        price: Number(data.price),
         thumbnails: thumbnailFiles,
         detailImages,
       })
@@ -262,7 +258,6 @@ export default function ProductForm({
         name: data.name,
         category: data.category,
         description: data.description,
-        price: Number(data.price),
         thumbnailFiles: onlyFiles(thumbnailFiles),
         detailImageFiles: onlyFiles(detailImages),
       })

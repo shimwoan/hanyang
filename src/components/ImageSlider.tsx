@@ -21,6 +21,7 @@ export default function ImageSlider({ images, alt }: Props) {
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
+    touchEndX.current = e.touches[0].clientX
   }
 
   const onTouchMove = (e: React.TouchEvent) => {

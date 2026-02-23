@@ -106,14 +106,6 @@ export default function ProductDetail() {
             <h1 className="text-[22px] sm:text-[26px] font-bold text-gray-900 leading-tight">
               {product.name}
             </h1>
-            {product.price > 0 ? (
-              <p className="mt-2 text-[16px] text-gray-500">
-                {product.price.toLocaleString()}원
-              </p>
-            ) : (
-              <p className="mt-2 text-[16px] text-gray-500">판매가 비공개</p>
-            )}
-
             <hr className="my-5 border-gray-200" />
 
             {product.description && (

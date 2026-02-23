@@ -10,7 +10,6 @@ export type Product = {
   name: string
   category: string
   description: string
-  price: number
   main_image: string
   thumbnail_images: string[]
   detail_images: string[]
