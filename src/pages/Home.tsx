@@ -65,18 +65,18 @@ export default function Home() {
             <span className="text-gray-400 font-normal">{totalCount ?? products.length}</span>
           </p>
           <div className="relative w-48 sm:w-56">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="상품명 검색"
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-9 pr-8 text-sm text-gray-900 outline-none transition focus:border-gray-400 focus:bg-white"
+              className="w-full border-b border-gray-300 bg-transparent py-1.5 pl-6 pr-6 text-sm text-gray-900 outline-none transition focus:border-gray-900 placeholder:text-gray-400"
             />
             {searchInput && (
               <button
                 onClick={() => { setSearchInput(''); setSearch('') }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 <X className="h-4 w-4" />
               </button>
