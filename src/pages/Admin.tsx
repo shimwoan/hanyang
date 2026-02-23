@@ -16,17 +16,23 @@ import { Trash2, Plus, X, ExternalLink, Pencil } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export default function Admin() {
-  const [authed, setAuthed] = useState(false)
+  const [authed, setAuthed] = useState(() => localStorage.getItem('admin_auth') === 'true')
   const [showForm, setShowForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const { data: products, isLoading } = useProducts()
   const deleteProduct = useDeleteProduct()
 
   useEffect(() => {
-    if (sessionStorage.getItem('admin_auth') === 'true') {
-      setAuthed(true)
+    if (!showForm && !editingProduct) return
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowForm(false)
+        setEditingProduct(null)
+      }
     }
-  }, [])
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [showForm, editingProduct])
 
   if (!authed) {
     return <AdminLogin onLogin={() => setAuthed(true)} />
@@ -89,7 +95,28 @@ export default function Admin() {
           </Button>
         </div>
         {isLoading ? (
-          <p className="text-muted-foreground">로딩 중...</p>
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>이미지</TableHead>
+                  <TableHead>상품명</TableHead>
+                  <TableHead>카테고리</TableHead>
+                  <TableHead className="w-24">관리</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><div className="h-12 w-12 rounded bg-gray-200 animate-pulse" /></TableCell>
+                    <TableCell><div className="h-4 w-24 rounded bg-gray-200 animate-pulse" /></TableCell>
+                    <TableCell><div className="h-4 w-16 rounded bg-gray-200 animate-pulse" /></TableCell>
+                    <TableCell><div className="h-4 w-12 rounded bg-gray-200 animate-pulse" /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         ) : products && products.length > 0 ? (
           <div className="rounded-lg border">
             <Table>

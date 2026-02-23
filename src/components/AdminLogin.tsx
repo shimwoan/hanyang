@@ -12,7 +12,7 @@ export default function AdminLogin({ onLogin }: { onLogin: () => void }) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem('admin_auth', 'true')
+      localStorage.setItem('admin_auth', 'true')
       onLogin()
     } else {
       setError('비밀번호가 틀립니다.')
