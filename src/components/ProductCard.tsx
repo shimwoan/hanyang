@@ -19,7 +19,8 @@ export default function ProductCard({ product }: { product: Product }) {
       <div className="aspect-[3/4] overflow-hidden">
         <img
           src={product.main_image}
-          alt={product.name}
+          alt={`${product.name} - 한양티앤씨 ${product.category}`}
+          loading="lazy"
           className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
         />
       </div>

@@ -49,7 +49,7 @@ export default function Home() {
   )
 
   return (
-    <div className="min-h-screen">
+    <main className="min-h-screen">
       <Header
         showCategories
         selectedCategory={selectedCategory}
@@ -118,6 +118,6 @@ export default function Home() {
           )}
         </div>
       </div>
-    </div>
+    </main>
   )
 }

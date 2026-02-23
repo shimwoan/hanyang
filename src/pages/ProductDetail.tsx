@@ -49,6 +49,14 @@ export default function ProductDetail() {
 
   useEffect(() => { window.scrollTo(0, 0) }, [id])
 
+  useEffect(() => {
+    if (!product) return
+    document.title = `${product.name} | 한양티앤씨`
+    const meta = document.querySelector('meta[name="description"]')
+    if (meta) meta.setAttribute('content', `한양티앤씨 ${product.category} - ${product.name}${product.description ? '. ' + product.description.slice(0, 100) : ''}`)
+    return () => { document.title = '한양티앤씨 | 고무줄·밴드·끈 제조 전문업체' }
+  }, [product])
+
   if (isLoading && !product) {
     return <DetailSkeleton />
   }
