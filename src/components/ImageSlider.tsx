@@ -64,7 +64,7 @@ export default function ImageSlider({ images, alt }: Props) {
         {images.length > 1 && (
           <button
             onClick={prev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow hover:bg-white transition"
+            className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow hover:bg-white transition cursor-pointer"
           >
             <ChevronLeft className="h-5 w-5 text-gray-700" />
           </button>
@@ -74,7 +74,7 @@ export default function ImageSlider({ images, alt }: Props) {
         {images.length > 1 && (
           <button
             onClick={next}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow hover:bg-white transition"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow hover:bg-white transition cursor-pointer"
           >
             <ChevronRight className="h-5 w-5 text-gray-700" />
           </button>
@@ -88,7 +88,7 @@ export default function ImageSlider({ images, alt }: Props) {
             <button
               key={i}
               onClick={() => setCurrent(i)}
-              className={`h-2 w-2 rounded-full transition ${
+              className={`h-2 w-2 rounded-full transition cursor-pointer ${
                 i === current ? 'bg-gray-800' : 'bg-gray-300'
               }`}
             />
