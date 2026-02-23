@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
-
-const categories = ['수예', '고무']
+import { useCategories } from '@/hooks/useProducts'
 
 export default function Header({
   selectedCategory,
@@ -11,6 +10,7 @@ export default function Header({
   onSelectCategory?: (cat: string | null) => void
   showCategories?: boolean
 }) {
+  const { data: categories = [] } = useCategories()
   return (
     <header>
       {/* Logo */}

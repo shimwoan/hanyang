@@ -1,9 +1,21 @@
+import { useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import type { Product } from '@/lib/supabase'
 
 export default function ProductCard({ product }: { product: Product }) {
+  const prefetchImages = useCallback(() => {
+    const images = [
+      ...(product.thumbnail_images ?? []),
+      ...(product.detail_images ?? []),
+    ]
+    images.forEach((src) => {
+      const img = new Image()
+      img.src = src
+    })
+  }, [product.thumbnail_images, product.detail_images])
+
   return (
-    <Link to={`/product/${product.id}`} className="group block">
+    <Link to={`/product/${product.id}`} className="group block" onMouseEnter={prefetchImages}>
       <div className="aspect-[3/4] overflow-hidden">
         <img
           src={product.main_image}

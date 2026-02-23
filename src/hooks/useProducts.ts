@@ -100,7 +100,16 @@ export function useCategories() {
         .select('category')
       if (error) throw error
       const cats = [...new Set(data.map((d: { category: string }) => d.category))]
+      localStorage.setItem('categories', JSON.stringify(cats))
       return cats
+    },
+    placeholderData: () => {
+      try {
+        const cached = localStorage.getItem('categories')
+        return cached ? JSON.parse(cached) : undefined
+      } catch {
+        return undefined
+      }
     },
     staleTime: 0,
   })
