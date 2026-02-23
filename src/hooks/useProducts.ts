@@ -213,6 +213,61 @@ export function useCreateProduct() {
   })
 }
 
+type UpdateProductInput = {
+  id: string
+  name: string
+  category: string
+  description: string
+  price: number
+  thumbnails: (File | string)[]
+  detailImages: (File | string)[]
+}
+
+export function useUpdateProduct() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: UpdateProductInput) => {
+      const thumbnailUrls = await Promise.all(
+        input.thumbnails.map((item) =>
+          typeof item === 'string' ? item : uploadImage(item)
+        )
+      )
+      const detailImageUrls = await Promise.all(
+        input.detailImages.map((item) =>
+          typeof item === 'string' ? item : uploadImage(item)
+        )
+      )
+
+      const { data, error } = await supabase
+        .from('products')
+        .update({
+          name: input.name,
+          category: input.category,
+          description: input.description,
+          price: input.price,
+          main_image: thumbnailUrls[0],
+          thumbnail_images: thumbnailUrls,
+          detail_images: detailImageUrls,
+        })
+        .eq('id', input.id)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['products-first'] })
+      queryClient.invalidateQueries({ queryKey: ['products-more'] })
+      queryClient.invalidateQueries({ queryKey: ['products-count'] })
+      queryClient.invalidateQueries({ queryKey: ['product'] })
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
+    },
+  })
+}
+
 export function useDeleteProduct() {
   const queryClient = useQueryClient()
 

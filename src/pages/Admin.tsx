@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import AdminLogin from '@/components/AdminLogin'
 import ProductForm from '@/components/ProductForm'
 import { useProducts, useDeleteProduct } from '@/hooks/useProducts'
+import { type Product } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -11,12 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Trash2, Plus, X, ExternalLink } from 'lucide-react'
+import { Trash2, Plus, X, ExternalLink, Pencil } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export default function Admin() {
   const [authed, setAuthed] = useState(false)
   const [showForm, setShowForm] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const { data: products, isLoading } = useProducts()
   const deleteProduct = useDeleteProduct()
 
@@ -35,6 +37,11 @@ export default function Admin() {
     await deleteProduct.mutateAsync(id)
   }
 
+  const closeModal = () => {
+    setShowForm(false)
+    setEditingProduct(null)
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="mb-8 flex items-center justify-between">
@@ -45,20 +52,26 @@ export default function Admin() {
         </Link>
       </div>
 
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowForm(false)}>
+      {(showForm || editingProduct) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closeModal}>
           <div
             className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg bg-white p-4 lg:p-6 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              onClick={() => setShowForm(false)}
+              onClick={closeModal}
               className="absolute top-4 right-4 rounded-full p-1 text-gray-400 hover:text-gray-600 transition"
             >
               <X className="h-5 w-5" />
             </button>
-            <h2 className="mb-4 text-lg font-semibold">새 상품 등록</h2>
-            <ProductForm onSuccess={() => setShowForm(false)} />
+            <h2 className="mb-4 text-lg font-semibold">
+              {editingProduct ? '상품 수정' : '새 상품 등록'}
+            </h2>
+            <ProductForm
+              key={editingProduct?.id ?? 'new'}
+              product={editingProduct ?? undefined}
+              onSuccess={closeModal}
+            />
           </div>
         </div>
       )}
@@ -85,7 +98,7 @@ export default function Admin() {
                   <TableHead>이미지</TableHead>
                   <TableHead>상품명</TableHead>
                   <TableHead>카테고리</TableHead>
-                  <TableHead className="w-16">삭제</TableHead>
+                  <TableHead className="w-24">관리</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -101,14 +114,23 @@ export default function Admin() {
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell>{product.category}</TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(product.id, product.name)}
-                        disabled={deleteProduct.isPending}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setEditingProduct(product)}
+                        >
+                          <Pencil className="h-4 w-4 text-gray-500" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(product.id, product.name)}
+                          disabled={deleteProduct.isPending}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

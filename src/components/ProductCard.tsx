@@ -16,7 +16,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <Link to={`/product/${product.id}`} className="group block" onMouseEnter={prefetchImages}>
-      <div className="aspect-[3/4] overflow-hidden">
+      <div className="overflow-hidden">
         <img
           src={product.main_image}
           alt={`${product.name} - 한양티앤씨 ${product.category}`}

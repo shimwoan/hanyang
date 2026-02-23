@@ -26,7 +26,7 @@ export default function Header({
           <div className="flex gap-6 sm:gap-8 md:gap-10">
             <button
               onClick={() => onSelectCategory(null)}
-              className={`whitespace-nowrap pb-2.5 text-[14px] sm:text-[15px] font-medium border-b-[2.5px] transition-colors ${
+              className={`cursor-pointer whitespace-nowrap pb-2.5 text-[14px] sm:text-[15px] font-medium border-b-[2.5px] transition-colors ${
                 selectedCategory === null
                   ? 'border-gray-900 text-gray-900'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -38,7 +38,7 @@ export default function Header({
               <button
                 key={cat}
                 onClick={() => onSelectCategory(cat)}
-                className={`whitespace-nowrap pb-2.5 text-[14px] sm:text-[15px] font-medium border-b-[2.5px] transition-colors ${
+                className={`cursor-pointer whitespace-nowrap pb-2.5 text-[14px] sm:text-[15px] font-medium border-b-[2.5px] transition-colors ${
                   selectedCategory === cat
                     ? 'border-gray-900 text-gray-900'
                     : 'border-transparent text-gray-500 hover:text-gray-700'

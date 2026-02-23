@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { useCreateProduct } from '@/hooks/useProducts'
+import { useCreateProduct, useUpdateProduct } from '@/hooks/useProducts'
+import { type Product } from '@/lib/supabase'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { X, Upload } from 'lucide-react'
 
@@ -48,6 +49,10 @@ function ImagePreviewModal({
   )
 }
 
+function getPreviewUrl(item: File | string): string {
+  return typeof item === 'string' ? item : URL.createObjectURL(item)
+}
+
 function ImageDropZone({
   id,
   label,
@@ -59,7 +64,7 @@ function ImageDropZone({
 }: {
   id: string
   label: string
-  files: File[]
+  files: (File | string)[]
   onAdd: (files: File[]) => void
   onRemove: (index: number) => void
   showBadge?: boolean
@@ -127,48 +132,54 @@ function ImageDropZone({
       {files.length > 0 && (
         fullWidth ? (
           <div className="mt-3 space-y-3">
-            {files.map((file, i) => (
-              <div key={i} className="relative rounded-lg border overflow-hidden">
-                <img
-                  src={URL.createObjectURL(file)}
-                  alt={file.name}
-                  className="w-full max-h-[400px] object-contain bg-gray-50 cursor-pointer"
-                  onClick={(e) => { e.stopPropagation(); setPreviewSrc(URL.createObjectURL(file)) }}
-                />
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); onRemove(i) }}
-                  className="absolute top-2 right-2 rounded-full bg-red-500 p-1 text-white shadow"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
+            {files.map((file, i) => {
+              const src = getPreviewUrl(file)
+              return (
+                <div key={i} className="relative rounded-lg border overflow-hidden">
+                  <img
+                    src={src}
+                    alt={typeof file === 'string' ? 'image' : file.name}
+                    className="w-full max-h-[400px] object-contain bg-gray-50 cursor-pointer"
+                    onClick={(e) => { e.stopPropagation(); setPreviewSrc(src) }}
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onRemove(i) }}
+                    className="absolute top-2 right-2 rounded-full bg-red-500 p-1 text-white shadow"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )
+            })}
           </div>
         ) : (
           <div className="mt-3 flex flex-wrap gap-2">
-            {files.map((file, i) => (
-              <div key={i} className="relative">
-                <img
-                  src={URL.createObjectURL(file)}
-                  alt={file.name}
-                  className="h-20 w-20 rounded border object-cover cursor-pointer"
-                  onClick={(e) => { e.stopPropagation(); setPreviewSrc(URL.createObjectURL(file)) }}
-                />
-                {showBadge && i === 0 && (
-                  <span className="absolute top-0 left-0 rounded-br rounded-tl bg-orange-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                    대표
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); onRemove(i) }}
-                  className="absolute -top-1.5 -right-1.5 rounded-full bg-red-500 p-0.5 text-white shadow"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
+            {files.map((file, i) => {
+              const src = getPreviewUrl(file)
+              return (
+                <div key={i} className="relative">
+                  <img
+                    src={src}
+                    alt={typeof file === 'string' ? 'image' : file.name}
+                    className="h-20 w-20 rounded border object-cover cursor-pointer"
+                    onClick={(e) => { e.stopPropagation(); setPreviewSrc(src) }}
+                  />
+                  {showBadge && i === 0 && (
+                    <span className="absolute top-0 left-0 rounded-br rounded-tl bg-orange-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                      대표
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onRemove(i) }}
+                    className="absolute -top-1.5 -right-1.5 rounded-full bg-red-500 p-0.5 text-white shadow"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )
+            })}
           </div>
         )
       )}
@@ -179,30 +190,92 @@ function ImageDropZone({
   )
 }
 
-export default function ProductForm({ onSuccess }: { onSuccess?: () => void }) {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>()
+export default function ProductForm({
+  product,
+  onSuccess,
+}: {
+  product?: Product
+  onSuccess?: () => void
+}) {
+  const isEdit = !!product
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
+    defaultValues: product
+      ? {
+          name: product.name,
+          category: product.category,
+          description: product.description,
+          price: product.price,
+        }
+      : undefined,
+  })
+
   const createProduct = useCreateProduct()
-  const [thumbnailFiles, setThumbnailFiles] = useState<File[]>([])
-  const [detailImages, setDetailImages] = useState<File[]>([])
+  const updateProduct = useUpdateProduct()
+
+  const getInitialThumbnails = (p?: Product): (File | string)[] => {
+    if (!p) return []
+    if (p.thumbnail_images?.length) return [...p.thumbnail_images]
+    if (p.main_image) return [p.main_image]
+    return []
+  }
+
+  const [thumbnailFiles, setThumbnailFiles] = useState<(File | string)[]>(
+    getInitialThumbnails(product)
+  )
+  const [detailImages, setDetailImages] = useState<(File | string)[]>(
+    product?.detail_images ? [...product.detail_images] : []
+  )
+
+  useEffect(() => {
+    if (product) {
+      setThumbnailFiles(getInitialThumbnails(product))
+      setDetailImages(product.detail_images ? [...product.detail_images] : [])
+      reset({
+        name: product.name,
+        category: product.category,
+        description: product.description,
+        price: product.price,
+      })
+    }
+  }, [product, reset])
 
   const onSubmit = async (data: FormData) => {
     if (thumbnailFiles.length === 0) return alert('썸네일 이미지를 최소 1장 선택하세요.')
 
-    await createProduct.mutateAsync({
-      name: data.name,
-      category: data.category,
-      description: data.description,
-      price: Number(data.price),
-      thumbnailFiles,
-      detailImageFiles: detailImages,
-    })
+    if (isEdit) {
+      await updateProduct.mutateAsync({
+        id: product.id,
+        name: data.name,
+        category: data.category,
+        description: data.description,
+        price: Number(data.price),
+        thumbnails: thumbnailFiles,
+        detailImages,
+      })
+      alert('상품이 수정되었습니다.')
+    } else {
+      const onlyFiles = (arr: (File | string)[]): File[] =>
+        arr.filter((item): item is File => item instanceof File)
 
-    reset()
-    setThumbnailFiles([])
-    setDetailImages([])
-    alert('상품이 등록되었습니다.')
+      await createProduct.mutateAsync({
+        name: data.name,
+        category: data.category,
+        description: data.description,
+        price: Number(data.price),
+        thumbnailFiles: onlyFiles(thumbnailFiles),
+        detailImageFiles: onlyFiles(detailImages),
+      })
+      reset()
+      setThumbnailFiles([])
+      setDetailImages([])
+      alert('상품이 등록되었습니다.')
+    }
+
     onSuccess?.()
   }
+
+  const isPending = isEdit ? updateProduct.isPending : createProduct.isPending
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -256,10 +329,12 @@ export default function ProductForm({ onSuccess }: { onSuccess?: () => void }) {
 
       <Button
         type="submit"
-        disabled={createProduct.isPending}
+        disabled={isPending}
         className="w-full bg-[#f07d1a] hover:bg-[#d86c10]"
       >
-        {createProduct.isPending ? '등록 중...' : '상품 등록'}
+        {isPending
+          ? (isEdit ? '수정 중...' : '등록 중...')
+          : (isEdit ? '상품 수정' : '상품 등록')}
       </Button>
     </form>
   )
