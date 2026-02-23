@@ -11,10 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Plus, X, ExternalLink } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export default function Admin() {
   const [authed, setAuthed] = useState(false)
+  const [showForm, setShowForm] = useState(false)
   const { data: products, isLoading } = useProducts()
   const deleteProduct = useDeleteProduct()
 
@@ -37,25 +39,42 @@ export default function Admin() {
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-2xl font-bold">상품 관리</h1>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            sessionStorage.removeItem('admin_auth')
-            setAuthed(false)
-          }}
-        >
-          로그아웃
-        </Button>
+        <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition">
+          홈페이지
+          <ExternalLink className="h-4 w-4" />
+        </Link>
       </div>
 
-      <div className="mb-12 rounded-lg border bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold">새 상품 등록</h2>
-        <ProductForm />
-      </div>
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowForm(false)}>
+          <div
+            className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg bg-white p-4 lg:p-6 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowForm(false)}
+              className="absolute top-4 right-4 rounded-full p-1 text-gray-400 hover:text-gray-600 transition"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <h2 className="mb-4 text-lg font-semibold">새 상품 등록</h2>
+            <ProductForm onSuccess={() => setShowForm(false)} />
+          </div>
+        </div>
+      )}
 
       <div>
-        <h2 className="mb-4 text-lg font-semibold">등록된 상품</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">등록된 상품</h2>
+          <Button
+            onClick={() => setShowForm(true)}
+            size="sm"
+            className="bg-[#f07d1a] hover:bg-[#d86c10]"
+          >
+            <Plus className="h-4 w-4 mr-1.5" />
+            새 상품 등록
+          </Button>
+        </div>
         {isLoading ? (
           <p className="text-muted-foreground">로딩 중...</p>
         ) : products && products.length > 0 ? (
@@ -66,7 +85,6 @@ export default function Admin() {
                   <TableHead>이미지</TableHead>
                   <TableHead>상품명</TableHead>
                   <TableHead>카테고리</TableHead>
-                  <TableHead>가격</TableHead>
                   <TableHead className="w-16">삭제</TableHead>
                 </TableRow>
               </TableHeader>
@@ -82,7 +100,6 @@ export default function Admin() {
                     </TableCell>
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell>{product.category}</TableCell>
-                    <TableCell>{product.price.toLocaleString()}원</TableCell>
                     <TableCell>
                       <Button
                         variant="ghost"

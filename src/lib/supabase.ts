@@ -12,6 +12,7 @@ export type Product = {
   description: string
   price: number
   main_image: string
+  thumbnail_images: string[]
   detail_images: string[]
   created_at: string
 }

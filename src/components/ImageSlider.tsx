@@ -45,11 +45,19 @@ export default function ImageSlider({ images, alt }: Props) {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <img
-          src={images[current]}
-          alt={`${alt} ${current + 1}`}
-          className="h-full w-full object-contain"
-        />
+        <div
+          className="flex h-full transition-transform duration-300 ease-in-out"
+          style={{ transform: `translateX(-${current * 100}%)` }}
+        >
+          {images.map((src, i) => (
+            <img
+              key={i}
+              src={src}
+              alt={`${alt} ${i + 1}`}
+              className="h-full w-full shrink-0 object-contain"
+            />
+          ))}
+        </div>
 
         {/* Left arrow */}
         {images.length > 1 && (

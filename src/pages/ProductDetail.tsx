@@ -1,22 +1,59 @@
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useProduct } from '@/hooks/useProducts'
 import ImageSlider from '@/components/ImageSlider'
 import Header from '@/components/Header'
 
+function DetailSkeleton() {
+  return (
+    <div className="min-h-screen">
+      <Header />
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-10">
+        <div className="pt-4 pb-6 sm:pb-8">
+          <div className="flex items-center gap-2 animate-pulse">
+            <div className="h-4 w-12 rounded bg-gray-200" />
+            <div className="h-4 w-4 rounded bg-gray-100" />
+            <div className="h-4 w-16 rounded bg-gray-200" />
+            <div className="h-4 w-4 rounded bg-gray-100" />
+            <div className="h-4 w-24 rounded bg-gray-200" />
+          </div>
+        </div>
+        <div className="flex flex-col md:flex-row md:gap-12 lg:gap-16 animate-pulse">
+          <div className="w-full md:w-1/2 md:max-w-[520px] shrink-0">
+            <div className="aspect-square rounded bg-gray-200" />
+          </div>
+          <div className="mt-6 md:mt-0 flex-1 space-y-4">
+            <div className="h-8 w-2/3 rounded bg-gray-200" />
+            <div className="h-5 w-1/3 rounded bg-gray-200" />
+            <div className="h-px w-full bg-gray-200 my-5" />
+            <div className="h-4 w-full rounded bg-gray-200" />
+            <div className="h-4 w-4/5 rounded bg-gray-200" />
+          </div>
+        </div>
+
+        {/* 상세 정보 하단 스켈레톤 */}
+        <div className="mt-16 pb-20 animate-pulse">
+          <div className="h-6 w-24 rounded bg-gray-200 mb-4" />
+          <div className="mx-auto max-w-[1000px]">
+            <div className="w-full rounded bg-gray-200" style={{ height: '2400px' }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>()
-  const { data: product, isLoading, error } = useProduct(id!)
+  const { data: product, isLoading } = useProduct(id!)
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen">
-        <Header />
-        <p className="py-20 text-center text-gray-400 text-sm">로딩 중...</p>
-      </div>
-    )
+  useEffect(() => { window.scrollTo(0, 0) }, [id])
+
+  if (isLoading && !product) {
+    return <DetailSkeleton />
   }
 
-  if (error || !product) {
+  if (!product) {
     return (
       <div className="min-h-screen">
         <Header />
@@ -30,10 +67,8 @@ export default function ProductDetail() {
     )
   }
 
-  const images = product.detail_images ?? []
-  // 마지막 이미지가 상세 이미지, 나머지가 썸네일
-  const thumbnails = images.length > 1 ? images.slice(0, -1) : images
-  const detailImage = images.length > 1 ? images[images.length - 1] : null
+  const thumbnails = product.thumbnail_images?.length ? product.thumbnail_images : [product.main_image]
+  const detailImages = product.detail_images ?? []
 
   return (
     <div className="min-h-screen">
@@ -55,7 +90,7 @@ export default function ProductDetail() {
         <div className="flex flex-col md:flex-row md:gap-12 lg:gap-16">
           {/* Left - Thumbnail Slider */}
           <div className="w-full md:w-1/2 md:max-w-[520px] shrink-0">
-            <ImageSlider images={thumbnails.length > 0 ? thumbnails : [product.main_image]} alt={product.name} />
+            <ImageSlider images={thumbnails} alt={product.name} />
           </div>
 
           {/* Right - Info */}
@@ -82,18 +117,38 @@ export default function ProductDetail() {
           </div>
         </div>
 
-        {/* Detail Image - bottom section */}
-        {detailImage && (
+        {/* Detail Images - bottom section */}
+        {detailImages.length > 0 && (
           <div className="mt-16 pb-20">
             <h2 className="mb-4 text-lg font-semibold text-gray-900">상세 정보</h2>
-            <img
-              src={detailImage}
-              alt={`${product.name} 상세`}
-              className="mx-auto"
-            />
+            <div className="mx-auto max-w-[1000px] space-y-0">
+              {detailImages.map((src, i) => (
+                <DetailImage key={i} src={src} alt={`${product.name} 상세 ${i + 1}`} />
+              ))}
+            </div>
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+function DetailImage({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false)
+
+  return (
+    <div className="relative">
+      {!loaded && (
+        <div className="animate-pulse">
+          <div className="w-full rounded bg-gray-200" style={{ height: '800px' }} />
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={`w-full transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0 absolute'}`}
+        onLoad={() => setLoaded(true)}
+      />
     </div>
   )
 }

@@ -3,9 +3,9 @@ import { supabase, type Product } from '@/lib/supabase'
 
 const PAGE_SIZE = 20
 
-export function useProductCount(category: string | null) {
+export function useProductCount(category: string | null, search?: string) {
   return useQuery<number>({
-    queryKey: ['products-count', category],
+    queryKey: ['products-count', category, search],
     queryFn: async () => {
       let query = supabase
         .from('products')
@@ -14,14 +14,20 @@ export function useProductCount(category: string | null) {
       if (category) {
         query = query.eq('category', category)
       }
+      if (search) {
+        query = query.ilike('name', `%${search}%`)
+      }
 
       const { count, error } = await query
       if (error) throw error
       const val = count ?? 0
-      localStorage.setItem(`products-count-${category ?? 'all'}`, String(val))
+      if (!search) {
+        localStorage.setItem(`products-count-${category ?? 'all'}`, String(val))
+      }
       return val
     },
     placeholderData: () => {
+      if (search) return undefined
       const cached = localStorage.getItem(`products-count-${category ?? 'all'}`)
       return cached ? Number(cached) : undefined
     },
@@ -29,9 +35,9 @@ export function useProductCount(category: string | null) {
   })
 }
 
-export function useFirstPageProducts(category: string | null) {
+export function useFirstPageProducts(category: string | null, search?: string) {
   return useQuery<Product[]>({
-    queryKey: ['products-first', category],
+    queryKey: ['products-first', category, search],
     queryFn: async () => {
       let query = supabase
         .from('products')
@@ -42,17 +48,21 @@ export function useFirstPageProducts(category: string | null) {
       if (category) {
         query = query.eq('category', category)
       }
+      if (search) {
+        query = query.ilike('name', `%${search}%`)
+      }
 
       const { data, error } = await query
       if (error) throw error
       return data
     },
+    staleTime: 0,
   })
 }
 
-export function useMoreProducts(category: string | null, enabled: boolean) {
+export function useMoreProducts(category: string | null, enabled: boolean, search?: string) {
   return useInfiniteQuery<Product[]>({
-    queryKey: ['products-more', category],
+    queryKey: ['products-more', category, search],
     queryFn: async ({ pageParam = PAGE_SIZE }) => {
       let query = supabase
         .from('products')
@@ -62,6 +72,9 @@ export function useMoreProducts(category: string | null, enabled: boolean) {
 
       if (category) {
         query = query.eq('category', category)
+      }
+      if (search) {
+        query = query.ilike('name', `%${search}%`)
       }
 
       const { data, error } = await query
@@ -74,6 +87,7 @@ export function useMoreProducts(category: string | null, enabled: boolean) {
       return PAGE_SIZE + allPages.length * PAGE_SIZE
     },
     enabled,
+    staleTime: 0,
   })
 }
 
@@ -88,6 +102,7 @@ export function useCategories() {
       const cats = [...new Set(data.map((d: { category: string }) => d.category))]
       return cats
     },
+    staleTime: 0,
   })
 }
 
@@ -102,6 +117,7 @@ export function useProducts() {
       if (error) throw error
       return data
     },
+    staleTime: 0,
   })
 }
 
@@ -115,8 +131,18 @@ export function useProduct(id: string) {
         .eq('id', id)
         .single()
       if (error) throw error
+      localStorage.setItem(`product-${id}`, JSON.stringify(data))
       return data
     },
+    placeholderData: () => {
+      try {
+        const cached = localStorage.getItem(`product-${id}`)
+        return cached ? JSON.parse(cached) : undefined
+      } catch {
+        return undefined
+      }
+    },
+    staleTime: 0,
   })
 }
 
@@ -138,7 +164,7 @@ type CreateProductInput = {
   category: string
   description: string
   price: number
-  mainImageFile: File
+  thumbnailFiles: File[]
   detailImageFiles: File[]
 }
 
@@ -147,7 +173,9 @@ export function useCreateProduct() {
 
   return useMutation({
     mutationFn: async (input: CreateProductInput) => {
-      const mainImageUrl = await uploadImage(input.mainImageFile)
+      const thumbnailUrls = await Promise.all(
+        input.thumbnailFiles.map(uploadImage)
+      )
       const detailImageUrls = await Promise.all(
         input.detailImageFiles.map(uploadImage)
       )
@@ -156,8 +184,9 @@ export function useCreateProduct() {
         name: input.name,
         category: input.category,
         description: input.description,
-        price: input.price,
-        main_image: mainImageUrl,
+        price: input.price || 0,
+        main_image: thumbnailUrls[0],
+        thumbnail_images: thumbnailUrls,
         detail_images: detailImageUrls,
       }).select().single()
 
@@ -169,6 +198,8 @@ export function useCreateProduct() {
       queryClient.invalidateQueries({ queryKey: ['products-first'] })
       queryClient.invalidateQueries({ queryKey: ['products-more'] })
       queryClient.invalidateQueries({ queryKey: ['products-count'] })
+      queryClient.invalidateQueries({ queryKey: ['product'] })
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
     },
   })
 }
@@ -186,6 +217,8 @@ export function useDeleteProduct() {
       queryClient.invalidateQueries({ queryKey: ['products-first'] })
       queryClient.invalidateQueries({ queryKey: ['products-more'] })
       queryClient.invalidateQueries({ queryKey: ['products-count'] })
+      queryClient.invalidateQueries({ queryKey: ['product'] })
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
     },
   })
 }
