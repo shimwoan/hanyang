@@ -1,21 +1,30 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { Link } from 'react-router-dom'
-import { useInfiniteProducts, useCategories } from '@/hooks/useProducts'
+import { useState, useRef, useCallback } from 'react'
+import { useIsRestoring } from '@tanstack/react-query'
+import { useFirstPageProducts, useMoreProducts, useProductCount } from '@/hooks/useProducts'
 import ProductCard from '@/components/ProductCard'
-import { Settings } from 'lucide-react'
+import Header from '@/components/Header'
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const { data: categories } = useCategories()
+
+  const isRestoring = useIsRestoring()
+  const { data: totalCount } = useProductCount(selectedCategory)
+  const { data: firstPage, isLoading } = useFirstPageProducts(selectedCategory)
+  const firstPageFull = (firstPage?.length ?? 0) >= 20
+
   const {
-    data,
-    isLoading,
+    data: moreData,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteProducts(selectedCategory)
+  } = useMoreProducts(selectedCategory, firstPageFull)
 
-  const observerRef = useRef<IntersectionObserver>()
+  const products = [
+    ...(firstPage ?? []),
+    ...(moreData?.pages.flat() ?? []),
+  ]
+
+  const observerRef = useRef<IntersectionObserver>(null)
   const bottomRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (isFetchingNextPage) return
@@ -30,81 +39,45 @@ export default function Home() {
     [isFetchingNextPage, fetchNextPage, hasNextPage],
   )
 
-  const products = data?.pages.flat() ?? []
-  const allCategories = categories ?? []
-
   return (
     <div className="min-h-screen">
-      {/* Logo */}
-      <div className="flex items-center justify-center pt-10 pb-8 relative">
-        <Link to="/">
-          <img src="/logo.png" alt="한양티앤씨" className="h-16" />
-        </Link>
-        <Link
-          to="/admin"
-          className="absolute right-6 top-10 text-gray-300 hover:text-gray-500 transition"
-        >
-          <Settings className="h-5 w-5" />
-        </Link>
-      </div>
+      <Header
+        showCategories
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
 
-      {/* Category Tabs */}
-      <div className="border-b">
-        <div className="mx-auto max-w-5xl flex items-center justify-center gap-8 px-4 overflow-x-auto">
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className={`whitespace-nowrap py-3 text-sm font-medium border-b-2 transition ${
-              selectedCategory === null
-                ? 'border-black text-black'
-                : 'border-transparent text-gray-400 hover:text-gray-600'
-            }`}
-          >
-            전체
-          </button>
-          {allCategories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`whitespace-nowrap py-3 text-sm font-medium border-b-2 transition ${
-                selectedCategory === cat
-                  ? 'border-black text-black'
-                  : 'border-transparent text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+      {/* Container 1280px */}
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-10">
+        {/* Product count */}
+        <div className="pt-6 pb-4 sm:pt-8 sm:pb-5">
+          <p className="text-[14px] sm:text-[15px] text-gray-800 font-medium">
+            {selectedCategory ?? '전체'}{' '}
+            <span className="text-gray-400 font-normal">{totalCount ?? products.length}</span>
+          </p>
         </div>
-      </div>
 
-      {/* Product count */}
-      <div className="mx-auto max-w-5xl px-4 pt-6 pb-2">
-        <p className="text-sm text-gray-500">
-          {selectedCategory ?? '전체'}{' '}
-          <span className="text-gray-400">{products.length}</span>
-        </p>
-      </div>
+        {/* Product Grid - max 5 columns */}
+        <div className="pb-20">
+          {isRestoring || (isLoading && products.length === 0) ? (
+            <div className="py-20" />
+          ) : products.length === 0 ? (
+            <p className="py-20 text-center text-gray-400 text-sm">등록된 상품이 없습니다.</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-x-5 lg:gap-x-4 lg:gap-y-8">
+                {products.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
 
-      {/* Product Grid */}
-      <div className="mx-auto max-w-5xl px-4 pb-20">
-        {isLoading ? (
-          <p className="py-20 text-center text-gray-400">로딩 중...</p>
-        ) : products.length === 0 ? (
-          <p className="py-20 text-center text-gray-400">등록된 상품이 없습니다.</p>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-
-            <div ref={bottomRef} className="h-10" />
-            {isFetchingNextPage && (
-              <p className="py-4 text-center text-gray-400 text-sm">불러오는 중...</p>
-            )}
-          </>
-        )}
+              <div ref={bottomRef} className="h-10" />
+              {isFetchingNextPage && (
+                <p className="py-4 text-center text-gray-400 text-sm">불러오는 중...</p>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   )

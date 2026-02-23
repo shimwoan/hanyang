@@ -1,12 +1,59 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase, type Product } from '@/lib/supabase'
 
-const PAGE_SIZE = 12
+const PAGE_SIZE = 20
 
-export function useInfiniteProducts(category: string | null) {
+export function useProductCount(category: string | null) {
+  return useQuery<number>({
+    queryKey: ['products-count', category],
+    queryFn: async () => {
+      let query = supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true })
+
+      if (category) {
+        query = query.eq('category', category)
+      }
+
+      const { count, error } = await query
+      if (error) throw error
+      const val = count ?? 0
+      localStorage.setItem(`products-count-${category ?? 'all'}`, String(val))
+      return val
+    },
+    placeholderData: () => {
+      const cached = localStorage.getItem(`products-count-${category ?? 'all'}`)
+      return cached ? Number(cached) : undefined
+    },
+    staleTime: 0,
+  })
+}
+
+export function useFirstPageProducts(category: string | null) {
+  return useQuery<Product[]>({
+    queryKey: ['products-first', category],
+    queryFn: async () => {
+      let query = supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(0, PAGE_SIZE - 1)
+
+      if (category) {
+        query = query.eq('category', category)
+      }
+
+      const { data, error } = await query
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+export function useMoreProducts(category: string | null, enabled: boolean) {
   return useInfiniteQuery<Product[]>({
-    queryKey: ['products', category],
-    queryFn: async ({ pageParam = 0 }) => {
+    queryKey: ['products-more', category],
+    queryFn: async ({ pageParam = PAGE_SIZE }) => {
       let query = supabase
         .from('products')
         .select('*')
@@ -21,11 +68,12 @@ export function useInfiniteProducts(category: string | null) {
       if (error) throw error
       return data
     },
-    initialPageParam: 0,
+    initialPageParam: PAGE_SIZE,
     getNextPageParam: (lastPage, allPages) => {
       if (lastPage.length < PAGE_SIZE) return undefined
-      return allPages.length * PAGE_SIZE
+      return PAGE_SIZE + allPages.length * PAGE_SIZE
     },
+    enabled,
   })
 }
 
@@ -118,7 +166,9 @@ export function useCreateProduct() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
-      queryClient.invalidateQueries({ queryKey: ['categories'] })
+      queryClient.invalidateQueries({ queryKey: ['products-first'] })
+      queryClient.invalidateQueries({ queryKey: ['products-more'] })
+      queryClient.invalidateQueries({ queryKey: ['products-count'] })
     },
   })
 }
@@ -133,7 +183,9 @@ export function useDeleteProduct() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
-      queryClient.invalidateQueries({ queryKey: ['categories'] })
+      queryClient.invalidateQueries({ queryKey: ['products-first'] })
+      queryClient.invalidateQueries({ queryKey: ['products-more'] })
+      queryClient.invalidateQueries({ queryKey: ['products-count'] })
     },
   })
 }

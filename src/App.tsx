@@ -1,23 +1,40 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient } from '@tanstack/react-query'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import Home from '@/pages/Home'
 import ProductDetail from '@/pages/ProductDetail'
 import Admin from '@/pages/Admin'
+import Footer from '@/components/Footer'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      gcTime: 1000 * 60 * 60 * 24, // 24h
+      staleTime: 1000 * 60 * 5, // 5min
+    },
+  },
+})
+
+const persister = createSyncStoragePersister({
+  storage: window.localStorage,
+})
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
       <BrowserRouter>
-        <div className="min-h-screen bg-white">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/product/:id" element={<ProductDetail />} />
-            <Route path="/admin" element={<Admin />} />
-          </Routes>
+        <div className="flex min-h-screen flex-col bg-white">
+          <div className="flex-1">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/product/:id" element={<ProductDetail />} />
+              <Route path="/admin" element={<Admin />} />
+            </Routes>
+          </div>
+          <Footer />
         </div>
       </BrowserRouter>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   )
 }
