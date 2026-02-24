@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Trash2, Plus, X, ExternalLink, Pencil } from 'lucide-react'
+import { Trash2, Plus, X, ExternalLink, Pencil, LogOut } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export default function Admin() {
@@ -49,13 +49,26 @@ export default function Admin() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">상품 관리</h1>
+    <div className="mx-auto max-w-4xl px-4 pb-8 pt-5">
+      <div className="mb-10 flex items-center justify-between">
         <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition">
           홈페이지
           <ExternalLink className="h-4 w-4" />
         </Link>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            localStorage.removeItem('admin_auth')
+            setAuthed(false)
+          }}
+        >
+          <LogOut className="h-4 w-4 mr-1.5" />
+          로그아웃
+        </Button>
+      </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">상품 관리</h1>
       </div>
 
       {(showForm || editingProduct) && (
