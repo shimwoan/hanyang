@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-const ADMIN_PASSWORD = '3085'
+const ADMIN_PASSWORD = '1212612'
 
 export default function AdminLogin({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState('')
